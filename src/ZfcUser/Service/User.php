@@ -41,6 +41,11 @@ class User extends EventProvider implements ServiceManagerAwareInterface
     protected $registerForm;
 
     /**
+     * @var Form
+     */
+    protected $changePasswordForm;
+
+    /**
      * @var ServiceManager
      */
     protected $serviceManager;
@@ -98,6 +103,56 @@ class User extends EventProvider implements ServiceManagerAwareInterface
             return $processor($credential, $userObject);
         }
         return $credential;
+    }
+
+    /**
+     * change the current users password
+     *
+     * @param array $data
+     * @return boolean
+     */
+    public function changePassword(array $data)
+    {
+        $currentUser = $this->getAuthService()->getIdentity();
+
+        $oldPass = $data['credential'];
+        $newPass = $data['newCredential'];
+
+        $bcrypt = new Bcrypt;
+        $bcrypt->setCost($this->getOptions()->getPasswordCost());
+
+        if (!$bcrypt->verify($oldPass, $currentUser->getPassword())) {
+            return false;
+        }
+
+        $pass = $bcrypt->create($newPass);
+        $currentUser->setPassword($pass);
+
+        $this->getEventManager()->trigger(__FUNCTION__, $this, array('user' => $currentUser));
+        $this->getUserMapper()->update($currentUser);
+        $this->getEventManager()->trigger(__FUNCTION__.'.post', $this, array('user' => $currentUser));
+
+        return true;
+    }
+
+    public function changeEmail(array $data)
+    {
+        $currentUser = $this->getAuthService()->getIdentity();
+
+        $bcrypt = new Bcrypt;
+        $bcrypt->setCost($this->getOptions()->getPasswordCost());
+
+        if (!$bcrypt->verify($data['credential'], $currentUser->getPassword())) {
+            return false;
+        }
+
+        $currentUser->setEmail($data['newIdentity']);
+
+        $this->getEventManager()->trigger(__FUNCTION__, $this, array('user' => $currentUser));
+        $this->getUserMapper()->update($currentUser);
+        $this->getEventManager()->trigger(__FUNCTION__.'.post', $this, array('user' => $currentUser));
+
+        return true;
     }
 
     /**
@@ -189,6 +244,27 @@ class User extends EventProvider implements ServiceManagerAwareInterface
     public function setRegisterForm(Form $registerForm)
     {
         $this->registerForm = $registerForm;
+        return $this;
+    }
+
+    /**
+     * @return Form
+     */
+    public function getChangePasswordForm()
+    {
+        if (null === $this->changePasswordForm) {
+            $this->changePasswordForm = $this->getServiceManager()->get('zfcuser_change_password_form');
+        }
+        return $this->changePasswordForm;
+    }
+
+    /**
+     * @param Form $changePasswordForm
+     * @return User
+     */
+    public function setChangePasswordForm(Form $changePasswordForm)
+    {
+        $this->changePasswordForm = $changePasswordForm;
         return $this;
     }
 

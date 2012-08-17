@@ -2,10 +2,10 @@
 
 namespace ZfcUser;
 
-use Zend\ModuleManager\ModuleManager,
-    Zend\ModuleManager\Feature\AutoloaderProviderInterface,
-    Zend\ModuleManager\Feature\ConfigProviderInterface,
-    Zend\ModuleManager\Feature\ServiceProviderInterface;
+use Zend\ModuleManager\ModuleManager;
+use Zend\ModuleManager\Feature\AutoloaderProviderInterface;
+use Zend\ModuleManager\Feature\ConfigProviderInterface;
+use Zend\ModuleManager\Feature\ServiceProviderInterface;
 
 class Module implements
     AutoloaderProviderInterface,
@@ -106,6 +106,26 @@ class Module implements
                             'key'    => 'username'
                         )),
                         $options
+                    ));
+                    return $form;
+                },
+
+                'zfcuser_change_password_form' => function($sm) {
+                    $options = $sm->get('zfcuser_module_options');
+                    $form = new Form\ChangePassword(null, $sm->get('zfcuser_module_options'));
+                    $form->setInputFilter(new Form\ChangePasswordFilter($options));
+                    return $form;
+                },
+
+                'zfcuser_change_email_form' => function($sm) {
+                    $options = $sm->get('zfcuser_module_options');
+                    $form = new Form\ChangeEmail(null, $sm->get('zfcuser_module_options'));
+                    $form->setInputFilter(new Form\ChangeEmailFilter(
+                        $options,
+                        new Validator\NoRecordExists(array(
+                            'mapper' => $sm->get('zfcuser_user_mapper'),
+                            'key'    => 'email'
+                        ))
                     ));
                     return $form;
                 },
