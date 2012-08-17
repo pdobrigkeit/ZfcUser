@@ -1,5 +1,8 @@
 {
     "name": "zf-commons-custom/zfc-user",
+    "replace": {
+    	"zf-commons/zfc-user": "self.version",
+    },
     "description": "A generic user registration and authentication module for ZF2. Supports Zend\\Db and Doctrine2.",
     "type": "library",
     "keywords": [
