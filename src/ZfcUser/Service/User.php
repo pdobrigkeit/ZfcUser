@@ -78,10 +78,10 @@ class User extends EventProvider implements ServiceManagerAwareInterface
         /* @var $user \ZfcUser\Entity\UserInterface */
 
         $bcrypt = new Bcrypt;
-        $bcrypt->setCost($this->getOptions()->getPasswordCost());     
+        $bcrypt->setCost($this->getOptions()->getPasswordCost());
 
         $credential = $this->postprocessCredential($user->getPassword(), $user);
-        
+
         $user->setPassword($bcrypt->create($credential));
 
         if ($this->getOptions()->getEnableUsername()) {
@@ -125,7 +125,7 @@ class User extends EventProvider implements ServiceManagerAwareInterface
             return false;
         }
 
-        $pass = $bcrypt->create($newPass);
+        $pass = $bcrypt->create($this->postprocessCredential($newPass, $user));
         $currentUser->setPassword($pass);
 
         $this->getEventManager()->trigger(__FUNCTION__, $this, array('user' => $currentUser));
